@@ -27,12 +27,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sumaho-live/AppleContainerManager.git"
+    "url": "https://github.com/AndanteL/AppleContainerManager.git"
   },
   "bugs": {
-    "url": "https://github.com/sumaho-live/AppleContainerManager/issues"
+    "url": "https://github.com/AndanteL/AppleContainerManager/issues"
   },
-  "homepage": "https://github.com/sumaho-live/AppleContainerManager#readme",
+  "homepage": "https://github.com/AndanteL/AppleContainerManager#readme",
   "galleryBanner": {
     "color": "#1f2a3d",
     "theme": "dark"

@@ -8,7 +8,7 @@ This extension brings the authentic **DevContainer experience** to macOS's nativ
 > If you experience container hanging or repeated SSH interruptions, please try increasing the container's memory and CPU resources first.
 
 > [!WARNING]
-> Apple Container is currently in active development. You may experience SSH connection interruptions or unresponsive containers, which in severe cases could lead to **data loss**. This is not an issue with the extension itself. We are continuously working on solutions. If you have any workaround or suggestions, please [submit an issue](https://github.com/sumaho-live/AppleContainerManager/issues).
+> Apple Container is currently in active development. You may experience SSH connection interruptions or unresponsive containers, which in severe cases could lead to **data loss**. This is not an issue with the extension itself. We are continuously working on solutions. If you have any workaround or suggestions, please [submit an issue](https://github.com/AndanteL/AppleContainerManager/issues).
 
 ---
 
@@ -162,3 +162,5 @@ See `CHANGELOG.md` for a versioned history of notable changes.
 
 ## License
 MIT License © 2025 Apple Container. See `LICENSE` for details.
+
+This repository is derived from [sumaho-live/AppleContainerManager](https://github.com/sumaho-live/AppleContainerManager); the original MIT copyright notice is preserved in `LICENSE`.
