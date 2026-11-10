@@ -5,6 +5,7 @@ import {
   ImageSummary,
   isValidDnsDomain,
 } from "./cli/containerCli";
+import { ContainerAttachManager } from "./attach/containerAttachManager";
 import { AppleContainerError, ErrorCode } from "./core/errors";
 import { events } from "./core/events";
 import { log, logError, logWarn } from "./core/logger";
@@ -19,6 +20,7 @@ import { SystemTreeProvider, SystemTreeItem } from "./views/systemTree";
 import { fetchLatestRelease } from "./updater/githubClient";
 import { logFormatter } from "./core/logFormatter";
 import { ContainerLogManager } from "./core/containerLogs";
+import { openContainerTerminal } from "./core/containerTerminal";
 import { DevcontainerManager } from "./devcontainer/devcontainerManager";
 
 import { UpdateManager } from "./updater/updateManager";
@@ -34,6 +36,7 @@ export async function activate(
   const containersProvider = new ContainersTreeProvider(cli, logManager);
   const imagesProvider = new ImagesTreeProvider(cli);
   const devcontainerManager = new DevcontainerManager(cli);
+  const attachManager = new ContainerAttachManager(cli);
   const updateManager = new UpdateManager(cli, context);
 
   const reopenStatusBarItem = vscode.window.createStatusBarItem(
@@ -104,6 +107,7 @@ export async function activate(
     imagesProvider,
     logManager,
     devcontainerManager,
+    attachManager,
     updateManager,
   );
   registerErrorHandler(context);
@@ -161,6 +165,7 @@ function registerCommands(
   imagesProvider: ImagesTreeProvider,
   logManager: ContainerLogManager,
   devcontainerManager: DevcontainerManager,
+  attachManager: ContainerAttachManager,
   updateManager: UpdateManager,
 ): void {
   context.subscriptions.push(
@@ -281,31 +286,18 @@ function registerCommands(
         const input = await vscode.window.showInputBox({
           title: `Run Command in ${identifier}`,
           placeHolder: "e.g. npm install",
-          prompt: "Command will run via /bin/sh -c inside the container",
+          prompt:
+            "Command will run in an interactive shell; the terminal stays open for further commands",
         });
         if (!input?.trim()) {
           return;
         }
         await withCommandHandling(`Exec in ${identifier}`, async () => {
-          const { stdout, stderr } = await cli.execInContainer(
-            item.container.id,
-            ["/bin/sh", "-c", input],
-            {
-              user: undefined,
-              workdir: undefined,
-              tty: false,
-              interactive: false,
-            },
-          );
-          if (stdout?.trim()) {
-            log(stdout.trim());
-          }
-          if (stderr?.trim()) {
-            logWarn(stderr.trim());
-          }
-          void vscode.window.showInformationMessage(
-            `Command finished in ${identifier}.`,
-          );
+          openContainerTerminal({
+            containerId: item.container.id,
+            containerLabel: identifier,
+            initialCommand: input,
+          });
         });
       },
     ),
@@ -319,18 +311,25 @@ function registerCommands(
         await withCommandHandling(
           `Opening shell in ${identifier}`,
           async () => {
-            const term = vscode.window.createTerminal({
-              name: `Shell: ${identifier}`,
-              shellPath: "container",
-              shellArgs: [
-                "exec",
-                "--interactive",
-                "--tty",
-                item.container.id,
-                "/bin/sh",
-              ],
+            openContainerTerminal({
+              containerId: item.container.id,
+              containerLabel: identifier,
             });
-            term.show(true);
+          },
+        );
+      },
+    ),
+    vscode.commands.registerCommand(
+      "appleContainer.container.attach",
+      async (item?: ContainerTreeItem) => {
+        if (!item?.container || item.container.id === "empty-containers") {
+          return;
+        }
+        const identifier = item.container.name ?? item.container.id;
+        await withCommandHandling(
+          `Attaching to container ${identifier}`,
+          async () => {
+            await attachManager.attach(item.container.id, identifier);
           },
         );
       },

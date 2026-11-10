@@ -43,6 +43,14 @@ export interface ImageSummary {
   inUse?: boolean;
 }
 
+export interface ContainerAttachInfo {
+  publishedSshPort?: string;
+  publishedSshHost?: string;
+  ipAddress?: string;
+  workingDirectory: string;
+  mounts: { source: string; target: string }[];
+}
+
 export interface ExecOptions {
   timeout?: number;
   cwd?: string;
@@ -226,6 +234,119 @@ export class ContainerCli {
     return containers.find(
       (c) => c.id === containerId || c.name === containerId,
     );
+  }
+
+  /**
+   * Reads the network, port and mount information needed to reach a
+   * container over SSH and choose a useful remote workspace folder.
+   */
+  async getContainerAttachInfo(
+    containerId: string,
+  ): Promise<ContainerAttachInfo> {
+    const record = await this.readContainerRecord(containerId);
+    const configuration = this.asRecord(record?.["configuration"]);
+    if (!record || !configuration) {
+      throw new AppleContainerError(
+        `Unable to read container configuration for ${containerId}`,
+        ErrorCode.CommandFailed,
+      );
+    }
+
+    const status = this.asRecord(record["status"]);
+    let ipAddress: string | undefined;
+    for (const networks of [
+      this.asArray(status?.["networks"]),
+      this.asArray(record["networks"]),
+      this.asArray(configuration["networks"]),
+    ]) {
+      for (const network of networks ?? []) {
+        if (!this.isRecord(network)) {
+          continue;
+        }
+        const address = this.firstString(
+          network["ipv4Address"],
+          network["address"],
+          network["ipAddress"],
+          network["ip"],
+        );
+        if (address) {
+          ipAddress = address.split("/")[0];
+          break;
+        }
+      }
+      if (ipAddress) {
+        break;
+      }
+    }
+
+    let publishedSshPort: string | undefined;
+    let publishedSshHost: string | undefined;
+    for (const binding of this.asArray(configuration["publishedPorts"]) ?? []) {
+      if (!this.isRecord(binding)) {
+        continue;
+      }
+      const containerPort = this.firstString(
+        binding["containerPort"],
+        binding["port"],
+      );
+      const parsedContainerPort = containerPort
+        ? Number.parseInt(containerPort, 10)
+        : Number.NaN;
+      if (parsedContainerPort !== 22) {
+        continue;
+      }
+      const protocol =
+        this.firstString(binding["proto"], binding["protocol"]) ?? "tcp";
+      if (!protocol.toLowerCase().startsWith("tcp")) {
+        continue;
+      }
+      const hostPort = this.firstString(binding["hostPort"]);
+      if (!hostPort) {
+        continue;
+      }
+      publishedSshPort = hostPort;
+      publishedSshHost =
+        this.firstString(binding["hostAddress"], binding["hostIp"]) ??
+        "127.0.0.1";
+      if (
+        publishedSshHost === "0.0.0.0" ||
+        publishedSshHost === "::" ||
+        publishedSshHost === "[::]"
+      ) {
+        publishedSshHost = "127.0.0.1";
+      }
+      break;
+    }
+
+    const initProcess = this.asRecord(configuration["initProcess"]);
+    const configuredWorkdir = this.firstString(
+      initProcess?.["workingDirectory"],
+    );
+    const workingDirectory =
+      configuredWorkdir?.startsWith("/") ? configuredWorkdir : "/";
+
+    const mounts: ContainerAttachInfo["mounts"] = [];
+    for (const mount of this.asArray(configuration["mounts"]) ?? []) {
+      if (!this.isRecord(mount)) {
+        continue;
+      }
+      const source = this.firstString(mount["source"]);
+      const target = this.firstString(
+        mount["destination"],
+        mount["target"],
+      );
+      if (source && target) {
+        mounts.push({ source, target });
+      }
+    }
+
+    return {
+      publishedSshPort,
+      publishedSshHost,
+      ipAddress,
+      workingDirectory,
+      mounts,
+    };
   }
 
   /**

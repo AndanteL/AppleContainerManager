@@ -24,6 +24,8 @@ Transform any folder into a native Apple Container environment with a simple `.a
 - **Status Bar**: Quick access to "Reopen in Container"
 - Images view surfaces repository and tag details for quick version checks, including removal for unused images
 - Containers view now supports inline start / stop / remove controls with rich hover summaries (image, CPU / memory, ports)
+- Interactive container terminals use an available login shell (bash, zsh, fish, ksh or ash) with command history, tab completion, job control and colors. “Run Command in Container” executes in the same terminal and leaves the shell open for further commands
+- **Attach to Container**: right-click a running container to open it in a new VS Code Remote-SSH window. The extension prepares SSH access automatically, including installing OpenSSH Server in the running container after confirmation when it is missing
 - Opt-in log streaming per container with hover action, configurable timestamps, severity filters, and inline keyword highlighting in the Output channel
 - Dedicated System view with start / stop controls and update awareness
 - One-click “+” toolbar button launches a two-step container creation wizard (image & resources, then ports / volumes / extra args)
@@ -125,6 +127,7 @@ Add settings in your user or workspace settings:
 - `appleContainer.container.stop`: Stop a selected container
 - `appleContainer.container.logs.start`: Begin streaming logs for a running container to the Output panel
 - `appleContainer.container.logs.stop`: Stop streaming logs for a running container
+- `appleContainer.container.attach`: Attach to a running container in a new VS Code Remote-SSH window
 - `appleContainer.container.remove`: Remove a stopped container
 - `appleContainer.image.remove`: Remove an unused image
 - `appleContainer.containers.refresh`: Refresh the containers list (disabled when the service is stopped)

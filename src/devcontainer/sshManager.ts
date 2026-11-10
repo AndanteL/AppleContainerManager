@@ -18,6 +18,10 @@ export class SshManager {
         this.keyPath = path.join(this.sshDir, 'id_ed25519_acm'); // Specialized key for Apple Containers
     }
 
+    getIdentityFile(): string {
+        return this.keyPath;
+    }
+
     async ensureSshKey(): Promise<string> {
         try {
             await fs.mkdir(this.sshDir, { recursive: true, mode: 0o700 });
@@ -40,11 +44,16 @@ export class SshManager {
         }
     }
 
-    async updateConfig(containerName: string, port: string | number, user: string = 'root'): Promise<void> {
+    async updateConfig(
+        containerName: string,
+        port: string | number,
+        user: string = 'root',
+        hostName: string = 'localhost'
+    ): Promise<void> {
         try {
             const hostEntry = `
 Host acm-${containerName}
-    HostName localhost
+    HostName ${hostName}
     User ${user}
     Port ${port}
     IdentityFile ${this.keyPath}
@@ -69,7 +78,12 @@ Host acm-${containerName}
             const markerStart = `# start-acm-${containerName}`;
             const markerEnd = `# end-acm-${containerName}`;
 
-            const regex = new RegExp(`${markerStart}[\\s\\S]*?${markerEnd}`, 'g');
+            const escapeRegExp = (value: string): string =>
+                value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(
+                `${escapeRegExp(markerStart)}[\\s\\S]*?${escapeRegExp(markerEnd)}`,
+                'g'
+            );
 
             let newContent = configContent;
             const entry = `${markerStart}${hostEntry}${markerEnd}`;

@@ -60,6 +60,7 @@
     "onCommand:appleContainer.container.logs.start",
     "onCommand:appleContainer.container.logs.stop",
     "onCommand:appleContainer.container.logs.export",
+    "onCommand:appleContainer.container.attach",
     "onCommand:appleContainer.container.remove",
     "onCommand:appleContainer.container.create",
     "onCommand:appleContainer.system.upgrade",
@@ -242,6 +243,11 @@
         {
           "command": "appleContainer.container.stop",
           "when": "view == appleContainerContainers && viewItem =~ /container-running(-logging)?$/"
+        },
+        {
+          "command": "appleContainer.container.attach",
+          "when": "view == appleContainerContainers && viewItem =~ /container-running(-logging)?$/",
+          "group": "1_attach@0"
         },
         {
           "command": "appleContainer.container.logs.start",
@@ -431,6 +437,12 @@
         "title": "Stop Container",
         "category": "Apple Container",
         "icon": "$(debug-stop)"
+      },
+      {
+        "command": "appleContainer.container.attach",
+        "title": "Attach to Container in New Window",
+        "category": "Apple Container",
+        "icon": "$(remote)"
       },
       {
         "command": "appleContainer.container.logs.start",

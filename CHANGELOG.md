@@ -3,7 +3,11 @@
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- No unreleased changes.
+### Added
+- **Attach to Container**: right-click a running container to open it in a new VS Code Remote-SSH window. The extension resolves the container's published SSH port or direct container IP, prepares an SSH server (offering to install OpenSSH Server in the running container when missing), injects the extension's public key, verifies SSH authentication, and chooses a mounted workspace folder when possible.
+
+### Fixed
+- **Interactive Terminal**: `Run Command in Container` now runs the command in a real interactive TTY and keeps the shell open afterwards. `Open Shell in Container` now prefers the container user's login shell and falls back through bash, zsh, fish, ksh and ash instead of launching `/bin/sh` directly. This restores arrow-key command history, tab completion, job control and colors on images where `/bin/sh` is dash.
 
 ## [0.9.7] - 2026-10-15
 ### Fixed
