@@ -1,5 +1,7 @@
 # Apple Container Manager for VS Code
 
+**English** | [简体中文](README.zh-CN.md)
+
 **Use Apple Container as a Dev Container in VS Code.**
 
 This extension brings the authentic **DevContainer experience** to macOS's native `container` environment. It handles all the complexity—SSH key injection, config management, and lifecycle handling—so you can just open your project and code, exactly like you do with Docker.
